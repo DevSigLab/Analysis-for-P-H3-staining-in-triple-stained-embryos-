@@ -69,7 +69,7 @@ C2inttreshold2<-C2inttreshold['embryo2[, 29]',]
 C2inttreshold2
 
 
-#counting the number of endodermal cells (sox32+ tbx16+ cells) cells   
+#counting the number of endodermal cells (sox32+ tbx16+ cells)   
 
 data1<-subset(embryo2, subset = Intensity_MeanIntensity_SOX32 > C2treshold  & Intensity_MeanIntensity_TBX16 > C4treshold)
 data1<-subset(data1, subset =  Intensity_StdIntensity_SOX32 > C2inttreshold2)
@@ -109,7 +109,7 @@ ph3mesoderm
 
 
 
-# counting the nubmer of number of non endodermal cell pool (sox32-cells) 
+# counting the number of non endodermal cell pool (sox32-cells) 
 
 data5<-subset(embryo2, subset = Intensity_MeanIntensity_SOX32 < C2treshold)
 
