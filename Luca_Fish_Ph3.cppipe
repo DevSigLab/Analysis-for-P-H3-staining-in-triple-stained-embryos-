@@ -1,0 +1,139 @@
+CellProfiler Pipeline: http://www.cellprofiler.org
+Version:5
+DateRevision:421
+GitHash:
+ModuleCount:9
+HasImagePlaneDetails:False
+
+Images:[module_num:1|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['To begin creating your project, use the Images module to compile a list of files and/or folders that you want to analyze. You can also specify a set of rules to include only the desired files in your selected folders.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    :
+    Filter images?:Images only
+    Select the rule criteria:and (extension does isimage) (file doesnot containregexp "[\\\\/]\\.")
+
+Metadata:[module_num:2|svn_version:'Unknown'|variable_revision_number:6|show_window:False|notes:['The Metadata module optionally allows you to extract information describing your images (i.e, metadata) which will be stored along with your measurements. This information can be contained in the file name and/or location, or in an external file.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Extract metadata?:No
+    Metadata data type:Text
+    Metadata types:{}
+    Extraction method count:1
+    Metadata extraction method:Extract from file/folder names
+    Metadata source:File name
+    Regular expression to extract from file name:^(?P<Plate>.*)_(?P<Well>[A-P][0-9]{2})_s(?P<Site>[0-9])_w(?P<ChannelNumber>[0-9])
+    Regular expression to extract from folder name:(?P<Date>[0-9]{4}_[0-9]{2}_[0-9]{2})$
+    Extract metadata from:All images
+    Select the filtering criteria:and (file does contain "")
+    Metadata file location:Elsewhere...|
+    Match file and image metadata:[]
+    Use case insensitive matching?:No
+    Metadata file name:None
+    Does cached metadata exist?:No
+
+NamesAndTypes:[module_num:3|svn_version:'Unknown'|variable_revision_number:8|show_window:False|notes:['The NamesAndTypes module allows you to assign a meaningful name to each image by which other modules will refer to it.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Assign a name to:Images matching rules
+    Select the image type:Grayscale image
+    Name to assign these images:DAPI
+    Match metadata:[]
+    Image set matching method:Order
+    Set intensity range from:Image metadata
+    Assignments count:5
+    Single images count:0
+    Maximum intensity:255.0
+    Process as 3D?:Yes
+    Relative pixel spacing in X:1.25
+    Relative pixel spacing in Y:1.25
+    Relative pixel spacing in Z:2.5
+    Select the rule criteria:and (file does contain "C1")
+    Name to assign these images:Labels
+    Name to assign these objects:Cell
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "C2")
+    Name to assign these images:DAPI
+    Name to assign these objects:Nucleus
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "C3")
+    Name to assign these images:SOX32
+    Name to assign these objects:Cytoplasm
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "C4")
+    Name to assign these images:PH3
+    Name to assign these objects:Speckle
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+    Select the rule criteria:and (file does contain "C5")
+    Name to assign these images:TBX16
+    Name to assign these objects:Object1
+    Select the image type:Grayscale image
+    Set intensity range from:Image metadata
+    Maximum intensity:255.0
+
+Groups:[module_num:4|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['The Groups module optionally allows you to split your list of images into image subsets (groups) which will be processed independently of each other. Examples of groupings include screening batches, microtiter plates, time-lapse movies, etc.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to group your images?:No
+    grouping metadata count:1
+    Metadata category:None
+
+ConvertImageToObjects:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Labels
+    Name the output object:Nuclear_3D_Labels
+    Convert to boolean image:No
+    Preserve original labels:Yes
+    Background label:0
+    Connectivity:0
+
+MeasureObjectSizeShape:[module_num:6|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:True]
+    Select object sets to measure:Nuclear_3D_Labels
+    Calculate the Zernike features?:No
+    Calculate the advanced features?:No
+
+FilterObjects:[module_num:7|svn_version:'Unknown'|variable_revision_number:9|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
+    Select the objects to filter:Nuclear_3D_Labels
+    Name the output objects:FilterObjects
+    Select the filtering mode:Measurements
+    Select the filtering method:Limits
+    Select the objects that contain the filtered objects:None
+    Select the location of the rules or classifier file:Elsewhere...|
+    Rules or classifier file name:rules.txt
+    Class number:1
+    Measurement count:1
+    Additional object count:0
+    Assign overlapping child to:Both parents
+    Keep removed objects as a seperate set?:No
+    Name the objects removed by the filter:RemovedObjects
+    Select the measurement to filter by:AreaShape_EquivalentDiameter
+    Filter using a minimum measurement value?:No
+    Minimum value:0.0
+    Filter using a maximum measurement value?:Yes
+    Maximum value:20
+
+MeasureObjectIntensity:[module_num:8|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:DAPI, PH3, SOX32, TBX16
+    Select objects to measure:Nuclear_3D_Labels
+
+ExportToSpreadsheet:[module_num:9|svn_version:'Unknown'|variable_revision_number:13|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the column delimiter:Comma (",")
+    Add image metadata columns to your object data file?:No
+    Add image file and folder names to your object data file?:No
+    Select the measurements to export:Yes
+    Calculate the per-image mean values for object measurements?:Yes
+    Calculate the per-image median values for object measurements?:Yes
+    Calculate the per-image standard deviation values for object measurements?:Yes
+    Output file location:Default Output Folder|F:\\Projects\\Luca\\Output
+    Create a GenePattern GCT file?:No
+    Select source of sample row name:Metadata
+    Select the image to use as the identifier:None
+    Select the metadata to use as the identifier:None
+    Export all measurement types?:Yes
+    Press button to select measurements:Nuclear_3D_Labels|AreaShape_Center_Y,Nuclear_3D_Labels|AreaShape_Center_Z,Nuclear_3D_Labels|AreaShape_Center_X,Nuclear_3D_Labels|AreaShape_Volume,Nuclear_3D_Labels|AreaShape_EquivalentDiameter,Nuclear_3D_Labels|Intensity_MeanIntensity_DAPI,Nuclear_3D_Labels|Intensity_MeanIntensity_TBX16,Nuclear_3D_Labels|Intensity_MeanIntensity_PH3,Nuclear_3D_Labels|Intensity_MeanIntensity_SOX32,Nuclear_3D_Labels|Intensity_MinIntensity_SOX32,Nuclear_3D_Labels|Intensity_MinIntensity_TBX16,Nuclear_3D_Labels|Intensity_MinIntensity_PH3,Nuclear_3D_Labels|Intensity_IntegratedIntensity_SOX32,Nuclear_3D_Labels|Intensity_IntegratedIntensity_DAPI,Nuclear_3D_Labels|Intensity_IntegratedIntensity_PH3,Nuclear_3D_Labels|Intensity_IntegratedIntensity_TBX16,Nuclear_3D_Labels|Intensity_MedianIntensity_SOX32,Nuclear_3D_Labels|Intensity_MedianIntensity_PH3,Nuclear_3D_Labels|Intensity_MedianIntensity_TBX16,Nuclear_3D_Labels|Intensity_MedianIntensity_DAPI,Nuclear_3D_Labels|Intensity_MaxIntensity_DAPI,Nuclear_3D_Labels|Intensity_MaxIntensity_TBX16,Nuclear_3D_Labels|Intensity_MaxIntensity_PH3,Nuclear_3D_Labels|Intensity_MaxIntensity_SOX32,Nuclear_3D_Labels|Intensity_StdIntensity_PH3,Nuclear_3D_Labels|Intensity_StdIntensity_TBX16,Nuclear_3D_Labels|Intensity_StdIntensity_DAPI,Nuclear_3D_Labels|Intensity_StdIntensity_SOX32,Nuclear_3D_Labels|Location_CenterMassIntensity_X_PH3,Nuclear_3D_Labels|Location_CenterMassIntensity_X_TBX16,Nuclear_3D_Labels|Location_CenterMassIntensity_X_SOX32,Nuclear_3D_Labels|Location_CenterMassIntensity_X_DAPI,Nuclear_3D_Labels|Location_CenterMassIntensity_Z_SOX32,Nuclear_3D_Labels|Location_CenterMassIntensity_Z_TBX16,Nuclear_3D_Labels|Location_CenterMassIntensity_Z_DAPI,Nuclear_3D_Labels|Location_CenterMassIntensity_Z_PH3,Nuclear_3D_Labels|Location_CenterMassIntensity_Y_PH3,Nuclear_3D_Labels|Location_CenterMassIntensity_Y_TBX16,Nuclear_3D_Labels|Location_CenterMassIntensity_Y_SOX32,Nuclear_3D_Labels|Location_MaxIntensity_X_SOX32,Nuclear_3D_Labels|Location_MaxIntensity_X_TBX16,Nuclear_3D_Labels|Location_MaxIntensity_X_PH3,Nuclear_3D_Labels|Location_MaxIntensity_Y_SOX32,Nuclear_3D_Labels|Location_MaxIntensity_Y_TBX16,Nuclear_3D_Labels|Location_MaxIntensity_Y_PH3,Nuclear_3D_Labels|Location_MaxIntensity_Y_DAPI,Nuclear_3D_Labels|Location_MaxIntensity_Z_SOX32,Nuclear_3D_Labels|Location_MaxIntensity_Z_PH3,Nuclear_3D_Labels|Location_MaxIntensity_Z_DAPI,Nuclear_3D_Labels|Location_MaxIntensity_Z_TBX16,Nuclear_3D_Labels|Location_Center_X,Nuclear_3D_Labels|Location_Center_Z,Nuclear_3D_Labels|Location_Center_Y,Nuclear_3D_Labels|Number_Object_Number,Image|Series_DAPI,Image|Series_SOX32,Image|Series_TBX16,Image|Series_Labels,Image|Series_PH3,Image|PathName_Labels,Image|PathName_DAPI,Image|PathName_TBX16,Image|PathName_SOX32,Image|PathName_PH3,Image|Height_DAPI,Image|Height_PH3,Image|Height_TBX16,Image|Height_Labels,Image|Height_SOX32,Image|Group_Index,Image|Group_Number,Image|URL_Labels,Image|URL_TBX16,Image|URL_DAPI,Image|URL_PH3,Image|URL_SOX32,Image|Width_DAPI,Image|Width_Labels,Image|Width_TBX16,Image|Width_SOX32,Image|Width_PH3,Image|Scaling_PH3,Image|Scaling_Labels,Image|Scaling_DAPI,Image|Scaling_SOX32,Image|Scaling_TBX16,Image|MD5Digest_TBX16,Image|MD5Digest_Labels,Image|MD5Digest_SOX32,Image|MD5Digest_DAPI,Image|MD5Digest_PH3,Image|ModuleError_02Metadata,Image|ModuleError_03NamesAndTypes,Image|ModuleError_01Images,Image|ModuleError_04Groups,Image|ModuleError_05ConvertImageToObjects,Image|Frame_SOX32,Image|Frame_Labels,Image|Frame_PH3,Image|Frame_TBX16,Image|Frame_DAPI,Image|ExecutionTime_04Groups,Image|ExecutionTime_01Images,Image|ExecutionTime_02Metadata,Image|ExecutionTime_05ConvertImageToObjects,Image|ExecutionTime_03NamesAndTypes,Image|FileName_DAPI,Image|FileName_PH3,Image|FileName_SOX32,Image|FileName_Labels,Image|FileName_TBX16,Image|Count_Nuclear_3D_Labels,Experiment|Pipeline_Pipeline,Experiment|Run_Timestamp,Experiment|Modification_Timestamp,Experiment|CellProfiler_Version
+    Representation of Nan/Inf:NaN
+    Add a prefix to file names?:Yes
+    Filename prefix:August_10_2022_3D_Output_HPC_Cluster
+    Overwrite existing files without warning?:No
+    Data to export:Do not use
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
