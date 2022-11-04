@@ -1,0 +1,442 @@
+setBatchMode(true);
+
+dir1=getDirectory("Choose Source Directory");
+
+dir2=getDirectory("Choose Destination Directory");
+
+File.makeDirectory(dir2+"Mask/");
+
+File.makeDirectory(dir2+"Segmentation/");
+
+File.makeDirectory(dir2+"Quantification_C1/");
+File.makeDirectory(dir2+"Quantification_C2/");
+File.makeDirectory(dir2+"Quantification_C3/");
+File.makeDirectory(dir2+"Quantification_C4/");
+
+stitched=getFileList(dir1);
+
+for(j=0;j<stitched.length;j++){
+
+	open(dir1+stitched[j]);
+
+	name=getTitle();
+	getVoxelSize(width, height, depth, unit);
+	rename("Image");
+
+	width1=width;
+	height1=height;
+	depth1=depth;
+
+
+	//3d watershed
+
+	selectWindow("Image");
+	
+	run("Duplicate...", "title=DAPI duplicate channels=1");
+
+	Z=nSlices();
+
+	selectWindow("DAPI");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width=1 pixel_height=1 voxel_depth=2");
+
+	getVoxelSize(width, height, depth, unit);
+
+	setMinAndMax(0, 65535);
+
+	selectWindow("DAPI");
+
+	run("Duplicate...", "title=stack_threshold duplicate channels=1");
+
+	selectWindow("stack_threshold");
+
+	run("8-bit");
+	run("Reslice [/]...", "output="+width+" start=Top");
+
+	selectWindow("Reslice of stack_threshold");
+
+	rename("top");
+	run("Auto Local Threshold", "method=Mean radius=15 parameter_1=0 parameter_2=0 white stack");
+	run("Reslice [/]...", "output="+width+" start=Top avoid");
+
+	selectWindow("top");
+	close();
+
+	selectWindow("Reslice of top");
+	Ztop=nSlices();
+	run("Make Substack...", "  slices=1-"+Ztop+"-2");
+	
+	selectWindow("Reslice of top");
+	close();
+
+	selectWindow("Substack (1-"+Ztop+"-2)");
+	rename("top_threshold");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width="+width+" pixel_height="+height+" voxel_depth="+depth+"");
+	
+
+
+	selectWindow("stack_threshold");
+
+	run("Reslice [/]...", "output="+width+" start=Left rotate");
+
+	selectWindow("Reslice of stack_threshold");
+
+	rename("left");
+	run("Auto Local Threshold", "method=Mean radius=15 parameter_1=0 parameter_2=0 white stack");
+	run("Reslice [/]...", "output="+width+" start=Left rotate avoid");
+
+	selectWindow("left");
+	close();
+
+	selectWindow("Reslice of left");
+	Zleft=nSlices();
+	run("Make Substack...", "  slices=1-"+Zleft+"-2");
+
+	selectWindow("Reslice of left");
+	close();
+
+	selectWindow("Substack (1-"+Zleft+"-2)");
+	rename("left_threshold");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width="+width+" pixel_height="+height+" voxel_depth="+depth+"");
+
+
+
+	selectWindow("stack_threshold");
+	run("Auto Local Threshold", "method=Mean radius=15 parameter_1=0 parameter_2=0 white stack");
+
+
+
+
+	selectWindow("stack_threshold");
+
+	rename("threshold");
+
+
+	imageCalculator("AND create stack", "threshold","top_threshold");
+
+	selectWindow("threshold");
+	close();
+
+	selectWindow("top_threshold");
+	close();
+
+	selectWindow("Result of threshold");
+	rename("threshold");
+
+
+	imageCalculator("AND create stack", "threshold","left_threshold");
+
+	selectWindow("threshold");
+	close();
+
+	selectWindow("left_threshold");
+	close();
+
+	selectWindow("Result of threshold");
+	rename("threshold");
+
+	selectWindow("DAPI");
+
+	selectWindow("threshold");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width="+width1+" pixel_height="+height1+" voxel_depth="+depth1+"");
+
+	//run("Dilate", "stack");
+	//run("Erode", "stack");
+
+	//////////
+
+/*	selectWindow("threshold");
+
+	w=getWidth();
+	h=getHeight();
+	s=nSlices();
+
+	run("3D Manager");
+
+	selectWindow("threshold");
+	Ext.Manager3D_Segment(128, 255);
+
+	selectWindow("threshold-3Dseg");
+
+	Ext.Manager3D_AddImage();
+	Ext.Manager3D_Measure();
+	newImage("color size", "8-bit Black", w, h, s);
+
+	selectWindow("color size");
+	Ext.Manager3D_Count(nb);
+
+	Ext.Manager3D_DeselectAll();
+	for(i=0;i<nb;i++) {
+ 	    Ext.Manager3D_Measure3D(i,"Vol",V);
+
+	     s=0;
+
+	     if((V>50)&(V<500000)){//in most cases biggest cell clump around 50000, bg around 2000000
+	     	s=1;
+	     	}
+ 	    Ext.Manager3D_Select(i);
+ 	    Ext.Manager3D_FillStack(255*s,255*s,255*s);
+	}
+
+	selectWindow("threshold-3Dseg");
+	close();
+
+	selectWindow("threshold");
+	close();
+
+	selectWindow("color size");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width="+width1+" pixel_height="+height1+" voxel_depth="+depth1+"");
+	rename("threshold");*/
+
+
+	//////instead of just watershed, cut up to speed up large files... I hope!!!
+
+
+	selectWindow("DAPI");
+	getDimensions(width, height, channels, slices, frames);
+
+	run("Gaussian Blur...", "sigma=2 stack");
+	run("Invert", "stack");
+
+	newImage("Watershed combined", "8-bit black", width, height, slices);
+
+	wi=floor((width-50)/450); //window of 500 with overlap of 50
+
+	if((width-(wi*450+25))<100){ //so as not trying to watershed tiny error prone fragment
+
+		wi=wi-1;
+	
+	}
+
+	hk=floor((height-50)/450);
+
+	if((height-(hk*450+25))<100){ //so as not trying to watershed tiny error prone fragment
+
+		hk=hk-1;
+	
+	}
+
+	for(i = 0; i <= wi; i++) {
+
+		for(k = 0; k <= hk; k++) {
+
+			w=500;
+	
+			if(i==wi){
+	
+				w=width-(i*450);
+		
+			}
+
+			h=500;
+	
+			if(k==hk){
+	
+				h=height-(k*450);
+		
+			}
+
+			selectWindow("DAPI");
+
+			makeRectangle((i*450), (k*450), w, h);
+	
+			run("Duplicate...", "title=template duplicate");
+	
+			selectWindow("template");
+
+			run("Classic Watershed", "input=template mask=None use min=0 max=65535");
+
+			selectWindow("template");
+			close();
+		
+			selectWindow("watershed");
+			setOption("BlackBackground", false);
+			setThreshold(0, 0);
+			run("Convert to Mask", "method=Default background=Dark");
+
+
+			if(i==0){
+
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width=475 height=h position=Center-Left zero");
+			
+				run("Canvas Size...", "width=width height=h position=Center-Left zero");
+			
+			}else if(i==wi){
+
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width="+(w-25)+" height=h position=Center-Right zero");
+			
+				run("Canvas Size...", "width=width height=h position=Center-Right zero");
+		
+			}else{
+		
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width=450 height=h position=Center zero");
+			
+				run("Canvas Size...", "width="+(450*i+475)+" height=h position=Center-Right zero");
+
+				run("Canvas Size...", "width=width height=h position=Center-Left zero");
+		
+			}
+
+
+			if(k==0){
+
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width=width height=475 position=Top-Center zero");
+			
+				run("Canvas Size...", "width=width height=height position=Top-Center zero");
+			
+			}else if(k==hk){
+
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width=width height="+(h-25)+" position=Bottom-Center zero");
+			
+				run("Canvas Size...", "width=width height=height position=Bottom-Center zero");
+		
+			}else{
+		
+				selectWindow("watershed");
+			
+				run("Canvas Size...", "width=width height=450 position=Center zero");
+			
+				run("Canvas Size...", "width=width height="+(450*k+475)+" position=Bottom-Center zero");
+
+				run("Canvas Size...", "width=width height=height position=Top-Center zero");
+		
+			}
+
+	
+
+
+			imageCalculator("Add create stack", "Watershed combined","watershed");
+
+			selectImage("Watershed combined");
+			close();
+
+			selectImage("watershed");
+			close();
+	
+			selectImage("Result of Watershed combined");
+			rename("Watershed combined");
+		
+		}
+	
+	}
+
+	selectImage("Watershed combined");
+	rename("watershed");
+
+	selectWindow("watershed");
+	run("Invert", "stack");
+	run("Properties...", "channels=1 slices="+Z+" frames=1 unit=µm pixel_width="+width1+" pixel_height="+height1+" voxel_depth="+depth1+"");
+
+	
+	////////
+
+	imageCalculator("AND create stack", "threshold","watershed");
+
+	selectWindow("threshold");
+	close();
+
+	selectWindow("watershed");
+	close();
+
+	selectWindow("DAPI");
+	close();
+
+	selectWindow("Result of threshold");
+
+	run("Dilate", "stack");
+	run("Erode", "stack");
+	
+	rename("segmented");
+
+
+	name2=split(name,"stitched");
+
+	name3=name2[0]+"mask.tif";
+	
+	destination=dir2+"Mask/"+name3;
+
+	//selectWindow("Image");
+	//close();
+
+	selectWindow("segmented");
+	saveAs("Tiff",destination);
+	
+	selectWindow(name3);
+	rename("segmented");
+
+	print("Finished segmenting "+name2[0]);
+
+//	Ext.Manager3D_CloseResult("M");
+//	Ext.Manager3D_Close();
+
+
+	/////////////////////
+	////////////////////
+	///////////////////
+
+	run("3D Manager");
+	
+	selectWindow("segmented");
+	
+	Ext.Manager3D_Segment(128, 255);
+	selectWindow("segmented-3Dseg");
+	Ext.Manager3D_AddImage();
+	Ext.Manager3D_Measure();
+	Ext.Manager3D_SaveResult("M",dir2+"Segmentation/"+name3+"_segmentation.csv");
+	Ext.Manager3D_CloseResult("M");
+
+	selectWindow("segmented-3Dseg");
+	close();
+	selectWindow("segmented");
+	close();
+
+	selectWindow("Image");
+
+	rename("Template");
+	run("Split Channels");
+
+	selectWindow("C1-Template");
+	Ext.Manager3D_Quantif();
+	Ext.Manager3D_SaveResult("Q",dir2+"Quantification_C1/"+name3+"_C1.csv");
+	Ext.Manager3D_CloseResult("Q");
+	selectWindow("C1-Template");
+	close();
+
+	selectWindow("C2-Template");
+	Ext.Manager3D_Quantif();
+	Ext.Manager3D_SaveResult("Q",dir2+"Quantification_C2/"+name3+"_C2.csv");
+	Ext.Manager3D_CloseResult("Q");
+	selectWindow("C2-Template");
+	close();
+
+	selectWindow("C3-Template");
+	Ext.Manager3D_Quantif();
+	Ext.Manager3D_SaveResult("Q",dir2+"Quantification_C3/"+name3+"_C3.csv");
+	Ext.Manager3D_CloseResult("Q");
+	selectWindow("C3-Template");
+	close();
+
+	selectWindow("C4-Template");
+	Ext.Manager3D_Quantif();
+	Ext.Manager3D_SaveResult("Q",dir2+"Quantification_C4/"+name3+"_C4.csv");
+	Ext.Manager3D_CloseResult("Q");
+	selectWindow("C4-Template");
+	close();
+
+	Ext.Manager3D_Delete();
+	
+	Ext.Manager3D_Close();
+
+
+}
+
+setBatchMode("exit and display");
